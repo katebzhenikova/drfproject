@@ -1,20 +1,24 @@
 from django.contrib import admin
 from .models import User
 
-
+@admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('email', 'phone', 'is_active', 'is_staff', 'is_superuser')
-    list_filter = ('is_active', 'is_staff', 'is_superuser')
+    list_display = ('email', 'phone', 'city', 'is_active', 'is_staff')
+    search_fields = ('email', 'phone')
+    list_filter = ('is_active', 'is_staff', 'city')
+    ordering = ('email',)
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
-        ('Personal info', {'fields': ('phone', 'avatar')}),
-        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
+        (None, {'fields': ('email', 'phone', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name', 'city', 'avatar')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser',
+                                   'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
-    search_fields = ('email',)
-    ordering = ('email',)
-    filter_horizontal = ('groups', 'user_permissions',)
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'phone', 'password1', 'password2'),
+        }),
+    )
 
-
-admin.site.register(User, UserAdmin)
-
+# Если у вас есть другие модели, которые вы хотите зарегистрировать, добавьте их здесь.

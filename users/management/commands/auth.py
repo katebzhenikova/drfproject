@@ -20,6 +20,7 @@ class Command(BaseCommand):
             last_name='drf',
             is_staff=True,
             is_superuser=True,
+            phone=None,
         )
 
         user.set_password(os.getenv('SUPER_USER_EMAIL_PASS'))
