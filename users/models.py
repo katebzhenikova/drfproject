@@ -33,6 +33,9 @@ class Payment(models.Model):
         ('transfer', 'Перевод на счет')
     ]
     payment_method = models.CharField(max_length=10, choices=PAYMENT_METHOD_CHOICES)
+    payment_session = models.CharField(max_length=100, verbose_name='id сессии', **NULLABLE)
+    payment_link = models.URLField(max_length=400, verbose_name='ссылка на оплату', **NULLABLE)
+    payment_status = models.CharField(max_length=50, verbose_name='статус платежа', **NULLABLE)
 
     def __str__(self):
         return f" {self.user.verbose_name} on {self.pay_data.strftime('%Y-%m-%d')}"
