@@ -67,6 +67,7 @@ class PaymentStatusAPIView(APIView):
                 'currency': payment_intent.currency
             }
             return Response(response_data, status=status.HTTP_200_OK)
+
         except stripe.error.InvalidRequestError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:

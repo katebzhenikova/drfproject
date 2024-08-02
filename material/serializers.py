@@ -25,19 +25,6 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = '__all__'
 
-    def get_is_subscribed(self, obj):
-        user = self.context['request'].user
-        return Subscription.objects.filter(user=user, course=obj).exists()
-
-
-class CourseCreateSerializer(serializers.ModelSerializer):
-    lessons = LessonsSerializer(many=True)
-    description = serializers.CharField(validators=[NoExternalLinksValidator()])
-
-    class Meta:
-        model = Course
-        fields = '__all__'
-
     def create(self, validated_data):
         lessons_data = validated_data.pop('lessons')
         course_item = Course.objects.create(**validated_data)
@@ -48,6 +35,14 @@ class CourseCreateSerializer(serializers.ModelSerializer):
             Lessons.objects.create(course=course_item, **lesson_data)
 
         return course_item
+
+    def get_is_subscribed(self, obj):
+        user = self.context['request'].user
+        return Subscription.objects.filter(user=user, course=obj).exists()
+
+
+
+
 
 
 

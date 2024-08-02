@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from rest_framework import viewsets, generics, status
-from rest_framework.decorators import permission_classes
+from .tasks import send_update_notification
 from rest_framework.generics import CreateAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -8,8 +8,8 @@ from rest_framework.views import APIView
 
 from material.paginators import CustomPagination, CustomOffsetPagination
 from material.models import Course, Lessons, Subscription
-from material.permissions import IsModer, IsOwner, IsUserOwner
-from material.serializers import CourseSerializer, LessonsSerializer, CourseCreateSerializer
+from material.permissions import IsModer, IsOwner
+from material.serializers import CourseSerializer, LessonsSerializer
 
 
 class CourseViewSet(viewsets.ModelViewSet):
@@ -18,15 +18,12 @@ class CourseViewSet(viewsets.ModelViewSet):
     pagination_class = CustomPagination
 
     def get_permissions(self):
-
-        if self.request.user.groups.filter(name="Модераторы").exists():
-
-            if self.action in ["create", "destroy"]:
-                self.permission_classes = (~IsModer,)
-            elif self.action in ["update", "retrieve"]:
-                self.permission_classes = (IsModer,)
-        elif self.action != "create":
-            self.permission_classes = (IsOwner,)
+        if self.action == "create":
+            self.permission_classes = (~IsModer,)
+        elif self.action in ["update", "retrieve"]:
+            self.permission_classes = (IsModer | IsOwner,)
+        elif self.action == "destroy":
+            self.permission_classes = (~IsModer | IsOwner,)
         return super().get_permissions()
 
     def get_serializer_context(self):
@@ -35,36 +32,14 @@ class CourseViewSet(viewsets.ModelViewSet):
         return context
 
     def perform_create(self, serializer):
-        new_course = serializer.save()
-        new_course.owner = self.request.user
-        new_course.save()
+        new_course = serializer.save(owner=self.request.user)
 
-
-# class CourseCreateAPIView(generics.CreateAPIView):
-#     serializer_class = CourseCreateSerializer
-#     permission_classes = [IsAuthenticated, ~IsModer]  # Запрещаем создание курсов модераторам
-#
-#     def perform_create(self, serializer):
-#         new_course = serializer.save()
-#         new_course.owner = self.request.user
-#         new_course.save()
-
-
-# class CourseRetrieveAPIView(generics.RetrieveAPIView):
-#     serializer_class = CourseSerializer
-#     queryset = Lessons.objects.all()
-#     permission_classes = [IsAuthenticated, IsModer | IsOwner]  # Модераторы и владельцы могут просматривать
-#
-#
-# class CourseUpdateAPIView(generics.UpdateAPIView):
-#     serializer_class = CourseSerializer
-#     queryset = Lessons.objects.all()
-#
-#
-# class CourseDestroyAPIView(generics.DestroyAPIView):
-#     serializer_class = CourseSerializer
-#     queryset = Lessons.objects.all()
-#     permission_classes = [IsAuthenticated, IsModer | ~IsOwner]  # Модераторы и владельцы могут редактировать
+    def perform_update(self, serializer):
+        updated_course = serializer.save()
+        subscribers = Subscription.objects.filter(course=updated_course, is_subscribed=True)
+        for subscriber in subscribers:
+            print(f'Отправка уведомления для {subscriber.user.email}')
+            send_update_notification.delay(subscriber.user.email, updated_course.title)
 
 
 class LessonsCreateAPIView(CreateAPIView):

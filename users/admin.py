@@ -1,4 +1,6 @@
 from django.contrib import admin
+
+from material.models import Course, Subscription
 from .models import User
 
 @admin.register(User)
@@ -21,4 +23,15 @@ class UserAdmin(admin.ModelAdmin):
         }),
     )
 
-# Если у вас есть другие модели, которые вы хотите зарегистрировать, добавьте их здесь.
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'owner')
+    search_fields = ('is_subscribed', 'title')
+    list_filter = ('title', 'id')
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'course', 'is_subscribed')
+    search_fields = ('user', 'course', 'is_subscribed')
+    list_filter = ('user', 'course', 'is_subscribed')
