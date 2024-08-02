@@ -36,5 +36,18 @@ coverage report -m > coverage_report.txt
 
 В файле coverage_report.txt сохранены результаты тестов
 
+Задачи в фоновом режиме
+send_update_notification """Отправка на почту сообщения об обновлении курса"""
+last_login_check """Проверка даты последнего входа пользователя"""
+
+для запуска задач на Windows
+pip install redis 
+Запустить redis из cmd C:\Redis> redis-server.exe
+pip install celery (+ настройки в settings.py, __init__)
+pip install eventlet 
+pip install django-celery-beat  
+celery -A config worker -l INFO -P eventlet
+celery -A config beat --scheduler django --loglevel=info
+
 
 =========================================================
